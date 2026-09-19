@@ -94,4 +94,4 @@ las nuevas coordenadas, que luego copias en `generar_carnet.py`.
   responsive), no hace falta configurar nada aparte.
 - Para usar esto en internet (no solo en tu computadora), necesitas
   subir esta carpeta a un servicio de hosting con Python (Render,
-  Railway, PythonAnywhere, un VPS, etc.).
+  Railway, PythonAnywhere, un VPS, etc.)
