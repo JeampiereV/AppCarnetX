@@ -1,6 +1,5 @@
 Flask==3.1.3
-pypdf==5.9.0
-reportlab==4.4.10
+gunicorn==23.0.0
+Pillow
 qrcode[pil]==7.4.2
-python-barcode==0.15.1
-pillow
+python-barcode[images]==0.15.1

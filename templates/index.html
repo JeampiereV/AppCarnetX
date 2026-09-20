@@ -3,292 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>AppCarnetX</title>
+
+<!-- SEO -->
+<meta name="description" content="Genera tu carnet estudiantil de forma rápida y sencilla.">
+
+<!-- Open Graph -->
+<meta property="og:title" content="AppCarnetX">
+<meta property="og:description" content="By @Ig no disponible">
+<meta property="og:image" content="https://appcarnetx.onrender.com/static/img/logo.jpg">
+<meta property="og:url" content="https://appcarnetx.onrender.com/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AppCarnetX">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AppCarnetX">
+<meta name="twitter:description" content="Genera tu carnet estudiantil de forma rápida y sencilla.">
+<meta name="twitter:image" content="https://appcarnetx.onrender.com/static/img/logo.jpg">
+
+<!-- Fuentes -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --black:#000000;
-    --panel:#131316;
-    --panel-2:#1a1a1e;
-    --line:#2a2a2e;
-    --gray:#71767b;
-    --gray-light:#a7abb0;
-    --white:#f4f4f5;
-    --accent:#6b6f76;
-    --accent-soft:rgba(255,255,255,0.08);
-    --danger:#e03b2e;
-    --ok:#2fd97b;
-    --purple:#9a6bff;
-    --radius:14px;
-    --font-display:'Archivo Black', 'Inter', sans-serif;
-    --font-mono:'Space Mono', monospace;
-    --font-body:'Inter', sans-serif;
-    --font-elegant:'Playfair Display', serif;
-  }
-  body.theme-mamm{ --accent:#B01902; --accent-soft:rgba(176,25,2,0.16); }
-  body.theme-birf{ --accent:#00074D; --accent-soft:rgba(0,7,77,0.22); }
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:radial-gradient(ellipse at top, #141416 0%, var(--black) 60%);
-    color:var(--white);
-    font-family:var(--font-body);
-    min-height:100vh;
-    display:flex;
-    align-items:flex-start;
-    justify-content:center;
-    padding:clamp(24px,6vw,48px) 16px 80px;
-    position:relative;
-    overflow-x:hidden;
-  }
-  body::before{
-    content:"";
-    position:fixed; inset:0; pointer-events:none;
-    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
-    z-index:5; opacity:.5;
-  }
-
-  /* ---------- boot / encendido ---------- */
-  #boot{
-    position:fixed; inset:0; background:#000; z-index:999;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
-    animation:bootHide 1.5s ease forwards; animation-delay:1.1s;
-  }
-  #boot .word{
-    font-family:var(--font-display);
-    font-size:clamp(28px, 8vw, 56px);
-    color:#fff;
-    letter-spacing:.5px;
-    transform:scaleY(.004);
-    animation:bootFlicker 1.1s cubic-bezier(.2,1.3,.3,1) forwards;
-    text-align:center;
-  }
-  #boot .boot-ig{
-    display:flex; align-items:center; gap:6px;
-    font-family:var(--font-mono);
-    font-size:clamp(10px,2.6vw,13px);
-    color:var(--gray-light);
-    opacity:0;
-    animation:bootIgIn .5s ease forwards;
-    animation-delay:.75s;
-  }
-  #boot .boot-ig svg{width:14px;height:14px;}
-  @keyframes bootFlicker{
-    0%{transform:scaleY(.004) scaleX(1.4); opacity:0;}
-    40%{transform:scaleY(.004) scaleX(1.4); opacity:1;}
-    55%{transform:scaleY(1) scaleX(1); opacity:1;}
-    70%{transform:scaleY(.02) scaleX(1); opacity:1;}
-    85%{transform:scaleY(1) scaleX(1); opacity:1;}
-    100%{transform:scaleY(1) scaleX(1); opacity:1;}
-  }
-  @keyframes bootIgIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
-  @keyframes bootHide{
-    0%{opacity:1; visibility:visible;}
-    99%{opacity:0; visibility:visible;}
-    100%{opacity:0; visibility:hidden; pointer-events:none;}
-  }
-
-  #app{ width:100%; max-width:520px; animation:appIn .5s ease 1.15s both; }
-  @keyframes appIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-
-  /* ---------- header ---------- */
-  .brand{
-    display:flex; flex-direction:column; align-items:center;
-    gap:8px; margin-bottom:30px; text-align:center;
-  }
-  .brand-logo-slot{
-    display:flex; align-items:center; justify-content:center;
-    min-height:56px;
-  }
-  .brand-logo-slot img{
-    height:64px; width:auto; object-fit:contain;
-    filter:drop-shadow(0 2px 10px rgba(0,0,0,.5));
-  }
-  .brand-word{
-    font-family:var(--font-display);
-    font-size:26px;
-    letter-spacing:.5px;
-    margin:0;
-    transition:color .3s;
-  }
-  .brand-tag{
-    font-family:var(--font-elegant);
-    font-style:italic;
-    font-weight:600;
-    font-size:12.5px;
-    color:var(--gray-light);
-    margin:0;
-  }
-  .brand-ig{
-    display:flex; align-items:center; gap:6px;
-    font-family:var(--font-mono);
-    font-size:11px;
-    color:var(--gray);
-    margin-top:2px;
-  }
-  .brand-ig svg{width:13px;height:13px;}
-  .brand-ig b{color:var(--gray-light); font-weight:700;}
-
-  /* ---------- panel ---------- */
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:28px;
-    position:relative;
-    overflow:hidden;
-  }
-  .panel::before{ content:""; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); transition:background .3s; }
-
-  .field{margin-bottom:18px;}
-  .field label{
-    display:flex; align-items:center; gap:6px;
-    font-family:var(--font-mono);
-    font-size:11px; text-transform:uppercase; letter-spacing:.8px;
-    color:var(--gray-light); margin-bottom:8px;
-  }
-  .field label .req{color:var(--accent);}
-  .field label u{text-decoration-color:var(--accent); text-underline-offset:3px;}
-
-  input[type=text], input[type=tel], select, textarea{
-    width:100%; background:var(--panel-2); border:1px solid var(--line); color:var(--white);
-    padding:13px 14px; border-radius:10px; font-family:var(--font-body); font-size:14.5px;
-    outline:none; transition:border-color .15s, box-shadow .15s; appearance:none; -webkit-appearance:none;
-  }
-  select{
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2371767b'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 14px center; padding-right:34px;
-  }
-  input::placeholder{color:#55575c;}
-  input:focus, select:focus, textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
-  input.invalid{border-color:var(--danger); box-shadow:0 0 0 3px rgba(224,59,46,.14);}
-  input.valid{border-color:var(--ok);}
-
-  .hint{
-    display:flex; align-items:center; gap:6px;
-    font-family:var(--font-mono); font-size:10.5px; color:var(--gray); margin-top:6px; font-style:italic;
-  }
-  .hint.err{color:var(--danger); font-style:normal;}
-  .hint .check-ico{width:12px;height:12px; color:var(--gray-light); flex-shrink:0; display:none;}
-  .hint.is-valid .check-ico{display:inline-block;}
-
-  .row2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
-
-  .warn-inline{
-    display:flex; gap:8px; align-items:flex-start;
-    background:rgba(224,59,46,.08);
-    border:1px solid rgba(224,59,46,.3);
-    color:var(--danger);
-    font-size:12px; font-style:italic;
-    padding:10px 12px; border-radius:8px; margin:-6px 0 18px;
-  }
-
-  /* captcha */
-  .captcha-box{display:flex; align-items:center; gap:10px;}
-  #captchaCanvas{border-radius:10px; border:1px solid var(--line); background:#0d0d0f; cursor:pointer;}
-  .captcha-refresh{
-    width:46px;height:46px; flex-shrink:0; border-radius:10px; border:1px solid var(--line);
-    background:var(--panel-2); color:var(--gray-light);
-    display:flex;align-items:center;justify-content:center; cursor:pointer; transition:.15s;
-  }
-  .captcha-refresh:hover{border-color:var(--accent); color:var(--white);}
-  .captcha-refresh svg{width:18px;height:18px;}
-
-  .btn-generate{
-    width:100%; padding:16px; margin-top:8px; border:none; border-radius:10px;
-    background:var(--white); color:#000; font-family:var(--font-display); font-size:14px;
-    letter-spacing:.5px; text-transform:uppercase; cursor:pointer; transition:transform .12s, background .2s;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-  }
-  .btn-generate:hover{transform:translateY(-1px);}
-  .btn-generate:active{transform:translateY(0);}
-  .btn-generate svg{width:16px;height:16px;}
-
-  .form-msg{ font-family:var(--font-mono); font-size:11.5px; color:var(--danger); text-align:center; margin-top:10px; min-height:14px; }
-  .form-msg.ok{color:var(--ok);}
-
-  .preview{
-    margin-top:22px; border:1px solid var(--line); border-radius:var(--radius); padding:20px;
-    background:linear-gradient(160deg, var(--panel-2), var(--panel)); display:none;
-  }
-  .preview.show{display:block; animation:appIn .4s ease both;}
-  .preview .p-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:12px; border-bottom:1px dashed var(--line);}
-  .preview .p-head b{font-family:var(--font-mono); font-size:11px; color:var(--accent); text-transform:uppercase; letter-spacing:.5px;}
-  .p-row{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; color:var(--gray-light);}
-  .p-row b{color:var(--white); font-weight:600;}
-
-  footer{
-    margin-top:26px; display:flex; align-items:center; justify-content:center; gap:6px;
-    font-family:var(--font-mono); font-size:11.5px; color:var(--gray);
-  }
-  footer .ig-icon{width:14px;height:14px; flex-shrink:0;}
-  footer a{color:var(--gray-light); text-decoration:none;}
-  footer a:hover{color:var(--white);}
-
-  /* ---------- modal ---------- */
-  .overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,.75); backdrop-filter:blur(3px);
-    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
-  }
-  .overlay.show{display:flex; animation:fadeIn .2s ease;}
-  @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
-  .modal{
-    width:100%; max-width:440px; background:var(--panel); border:1px solid var(--line);
-    border-radius:16px; padding:26px; max-height:88vh; overflow-y:auto;
-    animation:modalIn .25s cubic-bezier(.2,.9,.3,1.2);
-  }
-  @keyframes modalIn{ from{opacity:0; transform:translateY(14px) scale(.97);} to{opacity:1; transform:translateY(0) scale(1);} }
-  .modal h2{
-    font-family:var(--font-elegant); font-style:italic; font-weight:700;
-    font-size:19px; margin:0 0 14px; display:flex; align-items:center; gap:10px;
-  }
-  .modal h2 svg{width:20px;height:20px; color:var(--accent); flex-shrink:0;}
-  .modal p.intro{font-size:13px; color:var(--gray-light); margin:0 0 10px;}
-  .modal ul{list-style:none; padding:0; margin:0 0 14px;}
-  .modal ul li{ font-size:13px; color:var(--white); padding:8px 0; border-bottom:1px solid var(--line); display:flex; gap:9px; align-items:flex-start;}
-  .modal ul li:last-child{border-bottom:none;}
-  .modal ul li .check-svg{width:15px;height:15px; color:var(--ok); flex-shrink:0; margin-top:1px;}
-  .modal .contact{ font-size:12.5px; display:flex; align-items:center; gap:6px; margin:12px 0; flex-wrap:wrap; }
-  .modal .contact svg{width:14px;height:14px; color:var(--white);}
-  .modal .contact .q-morado{color:var(--purple); font-weight:700;}
-  .modal .contact .e-blanco{color:var(--white);}
-  .modal .contact a{color:var(--white); text-decoration:underline;}
-  .modal .warning{ font-style:italic; font-weight:400; color:var(--danger); font-size:12.5px; margin:14px 0; line-height:1.5; }
-  .modal textarea{min-height:70px; resize:vertical;}
-  .modal-actions{display:flex; gap:10px; margin-top:18px;}
-  .btn-cancel, .btn-accept{
-    flex:1; padding:13px; border-radius:9px; font-family:var(--font-mono); font-size:12px;
-    letter-spacing:.5px; text-transform:uppercase; cursor:pointer; border:1px solid var(--line);
-  }
-  .btn-cancel{background:transparent; color:var(--gray-light);}
-  .btn-cancel:hover{border-color:var(--danger); color:var(--danger);}
-  .btn-accept{background:var(--accent); border:none; color:#fff; font-weight:700;}
-  .btn-accept:disabled{opacity:.4; cursor:not-allowed;}
-  .modal-msg{font-family:var(--font-mono); font-size:11px; color:var(--danger); margin-top:8px; min-height:12px;}
-</style>
+<!-- CSS -->
+<link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
 
+<body>
+  
 <div id="boot">
-  <div class="word">AppCarnetX</div>
-  <div class="boot-ig">
+  <div class="mark">App<span>Carnet</span>X</div>
+  <div class="ig">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-    <span>@xaberito_07</span>
+    Ig no disponible
   </div>
 </div>
 
 <div id="app">
 
   <div class="brand">
-    <div class="brand-logo-slot" id="brandLogoSlot">
-      <h1 class="brand-word" id="brandWord">AppCarnetX</h1>
+    <div class="brand-logo" id="brandLogo">
+      <img id="logoMamm" src="{{ url_for('static', filename='img/mamm_logo.png') }}" alt="I.E. Manuel Antonio Mesones Muro" style="display:none;">
+      <img id="logoBirf" src="{{ url_for('static', filename='img/birf_logo.png') }}" alt="Colegio Perú BIRF" style="display:none;">
     </div>
-    <p class="brand-tag">Generador de carnet escolar</p>
-    <div class="brand-ig">
+    <h1>App<span class="hl">Carnet</span><span class="x-accent">X</span></h1>
+    <p class="tag">Generador de carnet escolar</p>
+    <div class="ig-line">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-      By <b>@xaberito_07</b>
+      <a href="#">Ig no disponible</a>
     </div>
   </div>
 
@@ -303,60 +68,51 @@
       </select>
     </div>
 
-    <div class="warn-inline" id="birfWarning" style="display:none;">
-      ⚠ WARNING: Disponible carnet del Perú BIRF del año 2025.
+    <div class="ie-warning" id="birfWarning">
+      AVISO: Disponible carnet del Perú BIRF del año 2025.
     </div>
 
     <div class="field">
       <label for="dni">DNI <span class="req">*</span></label>
-      <input type="tel" id="dni" placeholder="00000000" maxlength="8" inputmode="numeric" autocomplete="off">
-      <div class="hint" id="dniHint"><span>8 dígitos numéricos</span></div>
+      <input type="tel" id="dni" placeholder="" maxlength="8" inputmode="numeric" autocomplete="off">
+      <div class="hint" id="dniHint"><span></span></div>
     </div>
 
     <div class="row2">
       <div class="field">
-        <label for="apellido"><u>Apellido</u> <span class="req">*</span></label>
-        <input type="text" id="apellido" placeholder="PÉREZ GÓMEZ" autocomplete="off">
-        <div class="hint" id="apellidoHint">
-          <svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>
-          <span>0 caracteres</span>
+        <label for="apellido">Apellido <span class="req">*</span></label>
+        <div class="input-wrap" id="apellidoWrap">
+          <input type="text" id="apellido" placeholder="" autocomplete="off" maxlength="40">
+          <span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd97b" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg></span>
         </div>
+        <div class="hint" id="apellidoHint"><span></span><span class="counter" id="apellidoCounter">0/40</span></div>
       </div>
       <div class="field">
-        <label for="nombre"><u>Nombre</u> <span class="req">*</span></label>
-        <input type="text" id="nombre" placeholder="JUAN CARLOS" autocomplete="off">
-        <div class="hint" id="nombreHint">
-          <svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg>
-          <span>0 caracteres</span>
+        <label for="nombre">Nombre<span class="req">*</span></label>
+        <div class="input-wrap" id="nombreWrap">
+          <input type="text" id="nombre" placeholder="" autocomplete="off" maxlength="40">
+          <span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#2fd97b" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg></span>
         </div>
+        <div class="hint" id="nombreHint"><span></span><span class="counter" id="nombreCounter">0/40</span></div>
       </div>
-    </div>
-
-    <div class="field">
-      <label for="nivel">Nivel <span class="req">*</span></label>
-      <select id="nivel" required>
-        <option value="" disabled selected>—</option>
-        <option value="PRIMARIA">Primaria</option>
-        <option value="SECUNDARIA">Secundaria</option>
-      </select>
     </div>
 
     <div class="row2">
       <div class="field">
         <label for="grado">Grado <span class="req">*</span></label>
         <select id="grado" required>
-          <option value="" disabled selected>—</option>
-          <option value="PRIMERO">Primero</option>
-          <option value="SEGUNDO">Segundo</option>
-          <option value="TERCERO">Tercero</option>
-          <option value="CUARTO">Cuarto</option>
-          <option value="QUINTO">Quinto</option>
+          <option value="" disabled selected></option>
+          <option value="1">PRIMERO</option>
+          <option value="2">SEGUNDO</option>
+          <option value="3">TERCERO</option>
+          <option value="4">CUARTO</option>
+          <option value="5">QUINTO</option>
         </select>
       </div>
       <div class="field">
         <label for="seccion">Sección <span class="req">*</span></label>
         <select id="seccion" required>
-          <option value="" disabled selected>—</option>
+          <option value="" disabled selected></option>
         </select>
       </div>
     </div>
@@ -364,9 +120,9 @@
     <div class="field">
       <label for="turno">Turno <span class="req">*</span></label>
       <select id="turno" required>
-        <option value="" disabled selected>—</option>
-        <option value="MAÑANA">Mañana</option>
-        <option value="TARDE">Tarde</option>
+        <option value="" disabled selected></option>
+        <option value="MAÑANA">MAÑANA</option>
+        <option value="TARDE">TARDE</option>
       </select>
     </div>
 
@@ -379,12 +135,11 @@
         </div>
         <input type="tel" id="captchaInput" placeholder="0000" maxlength="4" inputmode="numeric" style="flex:1;">
       </div>
-      <div class="hint"><span>Ingresa los 4 dígitos que ves en la imagen</span></div>
+      <div class="hint"><span></span></div>
     </div>
 
     <button type="submit" class="btn-generate">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="12" r="2"/><path d="M14 10h4M14 14h2"/></svg>
-      Generar carnet
     </button>
     <div class="form-msg" id="formMsg"></div>
   </form>
@@ -394,15 +149,15 @@
     <div class="p-row"><span>I.E.</span><b id="pIe">—</b></div>
     <div class="p-row"><span>DNI</span><b id="pDni">—</b></div>
     <div class="p-row"><span>Apellidos y nombres</span><b id="pNombre">—</b></div>
-    <div class="p-row"><span>Nivel</span><b id="pNivel">—</b></div>
     <div class="p-row"><span>Grado y sección</span><b id="pGrado">—</b></div>
     <div class="p-row"><span>Turno</span><b id="pTurno">—</b></div>
+    <div class="hint" style="margin-top:12px;"><span>Estos datos se usarán para componer tu carnet sobre la plantilla oficial.</span></div>
   </div>
 
   <footer>
     By
     <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-    <a href="#">@xaberito_07</a>
+    <a href="#">@Ig no disponible</a>
   </footer>
 </div>
 
@@ -410,26 +165,24 @@
 <div class="overlay" id="overlay">
   <div class="modal">
     <h2>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></svg>
       Política de Privacidad
     </h2>
     <p class="intro">Para continuar, declara que:</p>
     <ul>
-      <li><svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg> Los datos ingresados son reales y de uso académico.</li>
-      <li><svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg> No suplantarás identidades.</li>
-      <li><svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg> Aceptas el uso de tus datos solo para generar el carnet.</li>
-      <li><svg class="check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M4 12l5 5L20 6"/></svg> El sistema puede suspenderse en cualquier momento.</li>
+      <li><svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg> Los datos ingresados son reales y de uso académico.</li>
+      <li><svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg> No suplantarás identidades.</li>
+      <li><svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg> Aceptas el uso de tus datos solo para generar el carnet.</li>
+      <li><svg class="check-mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg> El sistema puede suspenderse en cualquier momento.</li>
     </ul>
-    <p class="intro" style="font-size:12px;">Si no estás de acuerdo, presiona "<b>Cancelar</b>".</p>
+    <p class="intro" style="font-size:12px;">Si no estás de acuerdo, presiona <u>"Cancelar"</u>.</p>
     <div class="contact">
-      <span class="q-morado">¿Problemas?</span>
-      <span class="e-blanco">Escríbenos:</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-      <a href="#">@xaberito_07</a>
+      <span class="q">¿Problemas?</span> <span class="w">Escríbenos:</span> <a href="#">@Ig no disponible</a>
     </div>
-    <p class="warning">⚠️ WARNING: Solo se puede generar un carnet cada 30 días.</p>
+    <p class="warning">AVISO: Solo se puede generar un carnet cada 30 días.</p>
     <div class="field" style="margin-bottom:0;">
-      <label for="razon">Mensaje obligatorio:</label>
+      <label for="razon">Mensaje / Razón <span class="req">(OBLIGATORIO)</span></label>
       <textarea id="razon" placeholder="Cuéntanos brevemente para qué necesitas el carnet..."></textarea>
     </div>
     <div class="modal-msg" id="modalMsg"></div>
@@ -440,256 +193,6 @@
   </div>
 </div>
 
-<script>
-(function(){
-  const body = document.body;
-  const ie = document.getElementById('ie');
-  const birfWarning = document.getElementById('birfWarning');
-  const brandLogoSlot = document.getElementById('brandLogoSlot');
-  const dni = document.getElementById('dni');
-  const dniHint = document.getElementById('dniHint');
-  const apellido = document.getElementById('apellido');
-  const nombre = document.getElementById('nombre');
-  const apellidoHint = document.getElementById('apellidoHint');
-  const nombreHint = document.getElementById('nombreHint');
-  const seccion = document.getElementById('seccion');
-  const form = document.getElementById('carnetForm');
-  const formMsg = document.getElementById('formMsg');
-  const overlay = document.getElementById('overlay');
-  const btnCancel = document.getElementById('btnCancel');
-  const btnAccept = document.getElementById('btnAccept');
-  const razon = document.getElementById('razon');
-  const modalMsg = document.getElementById('modalMsg');
-  const preview = document.getElementById('preview');
-
-  const LOGOS = {
-    mamm: { src: "/static/logo_mamm.png", alt: "I.E. Manuel Antonio Mesones Muro" },
-    birf: { src: "/static/logo_birf.png", alt: "I.E. Perú BIRF" }
-  };
-
-  // secciones A-Z
-  for (let c = 65; c <= 90; c++){
-    const opt = document.createElement('option');
-    opt.value = String.fromCharCode(c);
-    opt.textContent = String.fromCharCode(c);
-    seccion.appendChild(opt);
-  }
-
-  // tema + logo + aviso segun I.E.
-  ie.addEventListener('change', () => {
-    body.classList.remove('theme-mamm','theme-birf');
-    birfWarning.style.display = 'none';
-
-    if (ie.value === 'mamm' || ie.value === 'birf'){
-      body.classList.add('theme-' + ie.value);
-      const logo = LOGOS[ie.value];
-      brandLogoSlot.innerHTML = `<img src="${logo.src}" alt="${logo.alt}">`;
-    } else {
-      brandLogoSlot.innerHTML = `<h1 class="brand-word" id="brandWord">AppCarnetX</h1>`;
-    }
-
-    if (ie.value === 'birf'){
-      birfWarning.style.display = 'flex';
-    }
-  });
-
-  // mayusculas forzadas + solo letras (apellido / nombre)
-  function soloLetrasMayusculas(el, hintEl){
-    el.addEventListener('keypress', (e) => {
-      const char = String.fromCharCode(e.which || e.keyCode);
-      if (!/[a-zA-ZÁÉÍÓÚÑáéíóúñ ]/.test(char)){
-        e.preventDefault();
-      }
-    });
-    el.addEventListener('input', () => {
-      const pos = el.selectionStart;
-      el.value = el.value.replace(/[^a-zA-ZÁÉÍÓÚÑáéíóúñ ]/g,'').toUpperCase();
-      el.setSelectionRange(pos, pos);
-
-      const len = el.value.trim().length;
-      const span = hintEl.querySelector('span');
-      span.textContent = `${len} caracter${len === 1 ? '' : 'es'}`;
-      if (len > 0){
-        hintEl.classList.add('is-valid');
-      } else {
-        hintEl.classList.remove('is-valid');
-      }
-    });
-  }
-  soloLetrasMayusculas(apellido, apellidoHint);
-  soloLetrasMayusculas(nombre, nombreHint);
-
-  // DNI solo números, 8 dígitos
-  dni.addEventListener('input', () => {
-    dni.value = dni.value.replace(/\D/g,'').slice(0,8);
-    const span = dniHint.querySelector('span');
-    if (dni.value.length === 0){
-      dni.classList.remove('valid','invalid');
-      span.textContent = '8 dígitos numéricos';
-      dniHint.classList.remove('err');
-    } else if (dni.value.length < 8){
-      dni.classList.add('invalid'); dni.classList.remove('valid');
-      span.textContent = `Faltan ${8 - dni.value.length} dígito(s)`;
-      dniHint.classList.add('err');
-    } else {
-      dni.classList.add('valid'); dni.classList.remove('invalid');
-      span.textContent = 'DNI válido';
-      dniHint.classList.remove('err');
-    }
-  });
-
-  // ---------- captcha ----------
-  const canvas = document.getElementById('captchaCanvas');
-  const ctx = canvas.getContext('2d');
-  const captchaInput = document.getElementById('captchaInput');
-  let captchaCode = '';
-
-  function drawCaptcha(){
-    captchaCode = String(Math.floor(1000 + Math.random()*9000));
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = '#0d0d0f';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    for (let i=0;i<5;i++){
-      ctx.strokeStyle = `rgba(255,255,255,${Math.random()*0.15+0.05})`;
-      ctx.beginPath();
-      ctx.moveTo(Math.random()*canvas.width, Math.random()*canvas.height);
-      ctx.lineTo(Math.random()*canvas.width, Math.random()*canvas.height);
-      ctx.stroke();
-    }
-    ctx.font = "bold 24px 'Space Mono', monospace";
-    ctx.textBaseline = 'middle';
-    for (let i=0;i<captchaCode.length;i++){
-      ctx.save();
-      const x = 16 + i*24;
-      const y = 23 + (Math.random()*6-3);
-      const angle = (Math.random()*0.4-0.2);
-      ctx.translate(x,y);
-      ctx.rotate(angle);
-      ctx.fillStyle = '#f4f4f5';
-      ctx.fillText(captchaCode[i], 0, 0);
-      ctx.restore();
-    }
-    for (let i=0;i<25;i++){
-      ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.2})`;
-      ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1.5, 1.5);
-    }
-    captchaInput.value = '';
-  }
-  drawCaptcha();
-  document.getElementById('captchaRefresh').addEventListener('click', drawCaptcha);
-  canvas.addEventListener('click', drawCaptcha);
-  captchaInput.addEventListener('input', () => {
-    captchaInput.value = captchaInput.value.replace(/\D/g,'').slice(0,4);
-  });
-
-  // ---------- validación y envío ----------
-  let pendingData = null;
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    formMsg.textContent = '';
-    formMsg.classList.remove('ok');
-
-    const nivel = document.getElementById('nivel').value;
-    const grado = document.getElementById('grado').value;
-    const turno = document.getElementById('turno').value;
-
-    if (!ie.value){ return fail('Selecciona tu institución educativa.'); }
-    if (dni.value.length !== 8){ return fail('El DNI debe tener 8 dígitos.'); }
-    if (!apellido.value.trim()){ return fail('Ingresa tu apellido.'); }
-    if (!nombre.value.trim()){ return fail('Ingresa tu nombre.'); }
-    if (!nivel){ return fail('Selecciona el nivel.'); }
-    if (!grado){ return fail('Selecciona el grado.'); }
-    if (!seccion.value){ return fail('Selecciona la sección.'); }
-    if (!turno){ return fail('Selecciona el turno.'); }
-    if (captchaInput.value.length !== 4){ return fail('Completa el código de verificación.'); }
-    if (captchaInput.value !== captchaCode){
-      drawCaptcha();
-      return fail('Código de verificación incorrecto. Se generó uno nuevo.');
-    }
-
-    pendingData = {
-      ie: ie.value,
-      ieLabel: ie.options[ie.selectedIndex].text,
-      dni: dni.value,
-      apellido: apellido.value.trim(),
-      nombre: nombre.value.trim(),
-      nivel: nivel,
-      grado: grado,
-      seccion: seccion.value,
-      turno: turno
-    };
-
-    overlay.classList.add('show');
-  });
-
-  function fail(msg){ formMsg.textContent = msg; }
-
-  btnCancel.addEventListener('click', () => {
-    overlay.classList.remove('show');
-    pendingData = null;
-  });
-
-  btnAccept.addEventListener('click', async () => {
-    modalMsg.textContent = '';
-    if (!razon.value.trim()){
-      modalMsg.textContent = 'Debes indicar un mensaje o razón para continuar.';
-      return;
-    }
-
-    btnAccept.disabled = true;
-    btnAccept.textContent = 'Generando...';
-
-    const payload = { ...pendingData, razon: razon.value.trim() };
-
-    try{
-      const resp = await fetch('/generar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok){
-        const data = await resp.json().catch(() => ({}));
-        const msg = (data.errores && data.errores[0]) || 'No se pudo generar el carnet.';
-        modalMsg.textContent = msg;
-        return;
-      }
-
-      const blob = await resp.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `carnet_${pendingData.dni}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      overlay.classList.remove('show');
-      formMsg.textContent = '✓ Carnet generado y descargado correctamente.';
-      formMsg.classList.add('ok');
-
-      document.getElementById('pIe').textContent = pendingData.ieLabel;
-      document.getElementById('pDni').textContent = pendingData.dni;
-      document.getElementById('pNombre').textContent = `${pendingData.apellido}, ${pendingData.nombre}`;
-      document.getElementById('pNivel').textContent = pendingData.nivel;
-      document.getElementById('pGrado').textContent = `${pendingData.grado} "${pendingData.seccion}"`;
-      document.getElementById('pTurno').textContent = pendingData.turno;
-      preview.classList.add('show');
-
-    } catch(err){
-      modalMsg.textContent = 'No se pudo conectar con el servidor. Intenta de nuevo.';
-    } finally {
-      btnAccept.disabled = false;
-      btnAccept.textContent = 'Aceptar y generar';
-    }
-  });
-
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.classList.remove('show');
-  });
-})();
-</script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>

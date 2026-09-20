@@ -1,40 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-app.py
--------------------------------------------------------------
-Backend de AppCarnetX.
-
-- Sirve la interfaz (templates/index.html)
-- Recibe los datos del formulario en POST /generar
-- Valida todo en el servidor (nunca confíes solo en el navegador)
-- Aplica la regla "1 carnet cada 30 días" por DNI
-- Llama a generar_carnet.py para estampar los datos + QR + código
-  de barras sobre la plantilla PDF real, y devuelve el PDF final.
-- Envía una notificación por correo a xaberito2011@gmail.com con
-  cada solicitud (datos + mensaje/razón).
-
-EJECUTAR:
-    pip install -r requirements.txt
-    python app.py
-Luego abre: http://localhost:5000
-
-CONFIGURAR EL ENVÍO DE CORREO (ver sección "EMAIL" más abajo):
-    Necesitas una cuenta de Gmail con una "Contraseña de aplicación"
-    (no tu contraseña normal). Se configuran 2 variables de entorno
-    antes de ejecutar app.py:
-
-        Windows (PowerShell):
-            $env:SMTP_USER="tu_correo@gmail.com"
-            $env:SMTP_PASS="tu_contraseña_de_aplicación"
-        Mac/Linux:
-            export SMTP_USER="tu_correo@gmail.com"
-            export SMTP_PASS="tu_contraseña_de_aplicación"
-
-    Si no configuras estas variables, el sistema sigue funcionando
-    normalmente (genera el carnet igual), solo que no podrá enviar
-    el correo y lo avisará en la consola.
-"""
-
 import os
 import json
 import re
@@ -44,26 +7,69 @@ from datetime import datetime, timedelta
 
 from flask import Flask, render_template, request, jsonify, send_file
 
-from generar_carnet import generar_carnet, COORDENADAS
+from generar_carnet import generar_carnet, PLANTILLAS, GRADOS_TEXTO
 
 app = Flask(__name__)
 
 REGISTRO_PATH = "registro_generaciones.json"
 DIAS_LIMITE = 30
-IES_VALIDAS = set(COORDENADAS.keys())
+IES_VALIDAS = set(PLANTILLAS.keys())
 SECCIONES_VALIDAS = set(chr(c) for c in range(ord("A"), ord("Z") + 1))
-NIVELES_VALIDOS = {"PRIMARIA", "SECUNDARIA"}
-GRADOS_VALIDOS = {"PRIMERO", "SEGUNDO", "TERCERO", "CUARTO", "QUINTO"}
+GRADOS_VALIDOS = set(GRADOS_TEXTO.keys())  # {"1","2","3","4","5"}
 TURNOS_VALIDOS = {"MAÑANA", "TARDE"}
 
+# Solo letras (con tildes/Ñ) y espacios; nada de números ni símbolos.
+PATRON_SOLO_LETRAS = re.compile(r"^[A-ZÁÉÍÓÚÑÜ ]+$")
+
 # ---------------------------------------------------------------
-# EMAIL: a dónde se notifican las solicitudes
+# Correo de notificación
 # ---------------------------------------------------------------
-DESTINATARIO_NOTIFICACIONES = "xaberito2011@gmail.com"
+CORREO_DESTINO = "xaberito2011@gmail.com"
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = os.environ.get("SMTP_USER")  # tu correo Gmail
-SMTP_PASS = os.environ.get("SMTP_PASS")  # tu contraseña de aplicación
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASS = os.environ.get("SMTP_PASS", "")
+
+IE_NOMBRES = {
+    "mamm": "I.E. Manuel Antonio Mesones Muro",
+    "birf": "I.E. Perú BIRF",
+}
+
+
+def _enviar_correo_notificacion(datos):
+    """Envía un correo con los datos del carnet generado. Nunca
+    interrumpe la generación del carnet si algo falla."""
+    if not SMTP_USER or not SMTP_PASS:
+        print("[AppCarnetX] SMTP_USER / SMTP_PASS no configurados: "
+              "se omite el envío de correo.")
+        return
+
+    cuerpo = (
+        f"Se generó un nuevo carnet en AppCarnetX.\n\n"
+        f"Institución: {IE_NOMBRES.get(datos['ie'], datos['ie'])}\n"
+        f"DNI: {datos['dni']}\n"
+        f"Apellidos: {datos['apellido']}\n"
+        f"Nombres: {datos['nombre']}\n"
+        f"Grado: {GRADOS_TEXTO.get(datos['grado'], datos['grado'])}\n"
+        f"Sección: {datos['seccion']}\n"
+        f"Turno: {datos['turno']}\n\n"
+        f"Mensaje / razón indicada por la persona:\n{datos.get('razon', '')}\n\n"
+        f"Fecha: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    )
+
+    msg = MIMEText(cuerpo, _charset="utf-8")
+    msg["Subject"] = f"AppCarnetX - Nuevo carnet generado ({datos['dni']})"
+    msg["From"] = SMTP_USER
+    msg["To"] = CORREO_DESTINO
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(SMTP_USER, [CORREO_DESTINO], msg.as_string())
+    except Exception as e:
+        # No se debe romper la generación del carnet por un error de correo.
+        print(f"[AppCarnetX] No se pudo enviar el correo de notificación: {e}")
 
 
 # ---------------------------------------------------------------
@@ -102,46 +108,6 @@ def _registrar_generacion(dni):
 
 
 # ---------------------------------------------------------------
-# Notificación por correo
-# ---------------------------------------------------------------
-
-def _enviar_notificacion_email(datos):
-    """Envía un correo con el resumen de la solicitud. Si no hay
-    credenciales configuradas, solo lo avisa por consola y sigue."""
-    if not SMTP_USER or not SMTP_PASS:
-        print("[AVISO] SMTP_USER / SMTP_PASS no configurados: no se envió el correo.")
-        return
-
-    cuerpo = (
-        f"Nueva solicitud de carnet generada en AppCarnetX\n\n"
-        f"I.E.: {datos.get('ie')}\n"
-        f"DNI: {datos.get('dni')}\n"
-        f"Apellido: {datos.get('apellido')}\n"
-        f"Nombre: {datos.get('nombre')}\n"
-        f"Nivel: {datos.get('nivel')}\n"
-        f"Grado: {datos.get('grado')}\n"
-        f"Sección: {datos.get('seccion')}\n"
-        f"Turno: {datos.get('turno')}\n\n"
-        f"Mensaje / razón:\n{datos.get('razon')}\n"
-    )
-
-    msg = MIMEText(cuerpo, "plain", "utf-8")
-    msg["Subject"] = f"AppCarnetX - Nueva solicitud ({datos.get('dni')})"
-    msg["From"] = SMTP_USER
-    msg["To"] = DESTINATARIO_NOTIFICACIONES
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASS)
-            server.sendmail(SMTP_USER, [DESTINATARIO_NOTIFICACIONES], msg.as_string())
-    except Exception as e:
-        # Un fallo al enviar el correo NUNCA debe impedir que el
-        # usuario reciba su carnet ya generado.
-        print(f"[AVISO] No se pudo enviar el correo de notificación: {e}")
-
-
-# ---------------------------------------------------------------
 # Validación de los datos que llegan del formulario
 # ---------------------------------------------------------------
 
@@ -155,14 +121,17 @@ def _validar(datos):
     if not re.fullmatch(r"\d{8}", dni):
         errores.append("El DNI debe tener exactamente 8 dígitos numéricos.")
 
-    if not re.fullmatch(r"[A-ZÁÉÍÓÚÑ ]+", datos.get("apellido", "")):
+    apellido = datos.get("apellido", "").strip()
+    if not apellido:
+        errores.append("El apellido es obligatorio.")
+    elif not PATRON_SOLO_LETRAS.match(apellido):
         errores.append("El apellido solo puede contener letras.")
 
-    if not re.fullmatch(r"[A-ZÁÉÍÓÚÑ ]+", datos.get("nombre", "")):
+    nombre = datos.get("nombre", "").strip()
+    if not nombre:
+        errores.append("El nombre es obligatorio.")
+    elif not PATRON_SOLO_LETRAS.match(nombre):
         errores.append("El nombre solo puede contener letras.")
-
-    if datos.get("nivel") not in NIVELES_VALIDOS:
-        errores.append("Nivel inválido.")
 
     if datos.get("grado") not in GRADOS_VALIDOS:
         errores.append("Grado inválido.")
@@ -197,9 +166,7 @@ def generar():
     datos["nombre"] = datos.get("nombre", "").strip().upper()
     datos["dni"] = datos.get("dni", "").strip()
     datos["seccion"] = datos.get("seccion", "").strip().upper()
-    datos["nivel"] = datos.get("nivel", "").strip().upper()
-    datos["grado"] = datos.get("grado", "").strip().upper()
-    datos["turno"] = datos.get("turno", "").strip().upper()
+    datos["grado"] = str(datos.get("grado", "")).strip()
 
     errores = _validar(datos)
     if errores:
@@ -220,7 +187,7 @@ def generar():
         return jsonify({"ok": False, "errores": [f"Error al generar el carnet: {e}"]}), 500
 
     _registrar_generacion(datos["dni"])
-    _enviar_notificacion_email(datos)
+    _enviar_correo_notificacion(datos)
 
     return send_file(
         ruta_pdf,
@@ -231,4 +198,4 @@ def generar():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run()

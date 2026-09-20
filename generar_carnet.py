@@ -1,34 +1,8 @@
-# -*- coding: utf-8 -*-
-"""
-generar_carnet.py
--------------------------------------------------------------
-Compone los datos capturados en el formulario de AppCarnetX
-sobre TU plantilla PDF real (la que subiste: 3 carnets por
-hoja, listos para imprimir y recortar). Estampa cada campo,
-un código QR y un código de barras (ambos con el DNI) en las
-3 tarjetas de la hoja.
-
-INSTALACIÓN (una sola vez, en tu computadora):
-    pip install -r requirements.txt
-
-Las coordenadas de abajo ya están calculadas automáticamente a
-partir de tus plantillas reales (plantilla_mamm.pdf y
-plantilla_perubirf.pdf), leyendo la posición exacta de cada
-etiqueta ("Código:", "Apellidos:", etc.) en las 3 tarjetas de
-la hoja. Si en algún momento cambias el diseño del PDF, vuelve
-a correr:
-    python herramientas/ver_coordenadas.py plantillas/plantilla_mamm.pdf
-para reubicar los campos.
--------------------------------------------------------------
-"""
-
-import os
 import io
+import os
 from datetime import datetime
 
-from pypdf import PdfReader, PdfWriter
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
+from PIL import Image, ImageDraw, ImageFont
 
 try:
     import qrcode
@@ -45,153 +19,80 @@ except ImportError:
 
 
 # =================================================================
-# 1) COLORES DE MARCA (RGB 0-1, para reportlab)
+# Rutas de plantillas / fuente
 # =================================================================
 
-COLOR_MAMM = (0xB0 / 255, 0x19 / 255, 0x02 / 255)  # #B01902
-COLOR_BIRF = (0x00 / 255, 0x07 / 255, 0x4D / 255)  # #00074D
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-# =================================================================
-# 2) COORDENADAS REALES (en puntos PDF, origen abajo-izquierda)
-#    Calculadas a partir de tus plantillas. Cada hoja tiene 3
-#    tarjetas (slots) idénticas; se llenan las 3 con el mismo
-#    alumno para que salgan listas para recortar.
-# =================================================================
-
-def _slots_texto():
-    """Coordenadas (x, y) de cada campo de texto, por tarjeta (0,1,2)."""
-    return [
-        {  # tarjeta 1 (arriba)
-            "dni":      (281.1, 762.7),
-            "apellido": (286.9, 747.2),
-            "nombre":   (287.4, 731.7),
-            "nivel":    (275.6, 716.1),
-            "grado":    (279.1, 700.6),
-            "seccion":  (365.5, 696.2),
-            "turno":    (278.4, 685.1),
-        },
-        {  # tarjeta 2 (medio)
-            "dni":      (280.7, 635.8),
-            "apellido": (286.6, 620.3),
-            "nombre":   (287.1, 604.7),
-            "nivel":    (275.3, 589.2),
-            "grado":    (278.7, 573.7),
-            "seccion":  (365.2, 569.2),
-            "turno":    (278.0, 558.2),
-        },
-        {  # tarjeta 3 (abajo)
-            "dni":      (281.1, 508.9),
-            "apellido": (286.9, 493.3),
-            "nombre":   (287.4, 477.8),
-            "nivel":    (275.6, 462.3),
-            "grado":    (279.1, 446.8),
-            "seccion":  (365.5, 442.3),
-            "turno":    (278.4, 431.3),
-        },
-    ]
-
-
-# QR: se dibuja en el mismo lugar donde va el logo "marca de agua"
-# de cada tarjeta (a la derecha). Barra: en la franja libre justo
-# debajo del turno, encima de la barra de color "CARNÉ ESCOLAR".
-def _slots_qr_barcode(qr_bboxes):
-    slots = []
-    bar_tops = [670.75, 543.85, 416.95]     # borde superior de cada barra roja/azul
-    turno_y = [685.1, 558.2, 431.3]         # línea base del campo "Turno" en cada tarjeta
-    for i in range(3):
-        x0, y0, x1, y1 = qr_bboxes[i]
-        slots.append({
-            "qr": {"xy": (x0, y0), "size": (x1 - x0, y1 - y0)},
-            "barcode": {
-                "xy": (254.6, bar_tops[i] + 1),
-                "size": (147, (turno_y[i] - 2) - (bar_tops[i] + 1)),
-            },
-        })
-    return slots
-
-
-COORDENADAS = {
-    "mamm": {
-        "plantilla": "plantillas/plantilla_mamm.pdf",
-        "color_texto": COLOR_MAMM,
-        "font_size": {"apellido": 10, "nombre": 10, "dni": 9, "nivel": 9, "grado": 9, "seccion": 9, "turno": 9},
-        "max_width": 90,
-        "slots_texto": _slots_texto(),
-        "slots_extra": _slots_qr_barcode([
-            (373.5, 727.8, 402.0, 764.6),
-            (373.1, 600.9, 401.7, 637.7),
-            (373.5, 474.0, 402.0, 510.7),
-        ]),
-    },
-    "birf": {
-        "plantilla": "plantillas/plantilla_birf.pdf",
-        "color_texto": COLOR_BIRF,
-        "font_size": {"apellido": 10, "nombre": 10, "dni": 9, "nivel": 9, "grado": 9, "seccion": 9, "turno": 9},
-        "max_width": 90,
-        "slots_texto": _slots_texto(),
-        "slots_extra": _slots_qr_barcode([
-            (372.7, 729.6, 402.7, 764.9),
-            (372.7, 602.7, 402.7, 638.0),
-            (372.7, 475.8, 402.7, 511.1),
-        ]),
-    },
+PLANTILLAS = {
+    "mamm": os.path.join(BASE_DIR, "static", "templates", "plantilla_mamm.png"),
+    "birf": os.path.join(BASE_DIR, "static", "templates", "plantilla_birf.png"),
 }
 
-CARPETA_SALIDA = "salidas"
-FUENTE = "Helvetica-Bold"  # fuente base de PDF; soporta tildes y Ñ
+FUENTE_PATH = os.path.join(BASE_DIR, "fonts", "DejaVuSans-Bold.ttf")
+CARPETA_SALIDA = os.path.join(BASE_DIR, "salidas")
+
+# Grados
+GRADOS_TEXTO = {
+    "1": "PRIMERO",
+    "2": "SEGUNDO",
+    "3": "TERCERO",
+    "4": "CUARTO",
+    "5": "QUINTO",
+}
+
+NIVEL_TEXTO = "SECUNDARIA"
 
 
 # =================================================================
-# 3) UTILIDADES
+# Coordenadas (en píxeles) de cada una de las 3 tarjetas de la hoja
+# Orden de "textos": codigo, apellidos, nombres, nivel, grado, turno, seccion
 # =================================================================
 
-def _ajustar_tamano(c, texto, fuente, tamano_inicial, max_width):
-    tamano = tamano_inicial
-    while tamano > 6:
-        if c.stringWidth(texto, fuente, tamano) <= max_width:
-            return tamano
-        tamano -= 0.5
-    return 6
+COORDS = [
+    (605, 194), (605, 231), (605, 269), (605, 303), (605, 343), (605, 376), (780, 350),
+    (605, 495), (605, 533), (605, 569), (605, 609), (605, 647), (605, 679), (780, 654),
+    (605, 798), (605, 834), (605, 875), (605, 909), (605, 943), (605, 978), (780, 950),
+]
+
+QR_COORDS = [(460, 231), (460, 530), (460, 832)]
+BARCODE_COORDS = [(757, 364), (757, 667), (757, 970)]
+
+TAMANO_FUENTE = 12
+COLOR_TEXTO = "black"
+
+# Las plantillas miden 1414x2000 px. A 100 dpi (valor típico usado
+# a la ligera) la hoja saldría de ~14x20 pulgadas, demasiado grande
+# para imprimir en A4. Con ~171 dpi la hoja sale en tamaño A4 real
+# (21 x 29.7 cm), que es lo que necesitas para imprimir y cortar.
+RESOLUCION_PDF = 171.0
 
 
-def _generar_qr_imagereader(dni):
+# =================================================================
+# Utilidades: QR y código de barras
+# =================================================================
+
+def _generar_qr_con_borde(dni, size=130, borde=1, color_borde="gray"):
+    """QR del DNI, con un pequeño marco, listo para pegar en la plantilla."""
     if not QRCODE_DISPONIBLE:
         return None
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_M,
-        box_size=10,
-        border=1,
-    )
-    qr.add_data(dni)
-    qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return ImageReader(buf)
+    qr_img = qrcode.make(dni).resize((size, size))
+    qr_con_borde = Image.new("RGB", (size + borde * 2, size + borde * 2), color_borde)
+    qr_con_borde.paste(qr_img, (borde, borde))
+    return qr_con_borde
 
 
-def _generar_barcode_imagereader(dni):
-    """Código de barras Code128 con el DNI, como ImageReader para reportlab."""
+def _generar_barcode(dni, size=(200, 35)):
+    """Código de barras Code128 del DNI, como imagen PIL lista para pegar."""
     if not BARCODE_DISPONIBLE:
         return None
-    writer = ImageWriter()
-    writer.set_options({
-        "write_text": False,   # sin el número debajo, ya lo mostramos como texto aparte
-        "quiet_zone": 1,
-        "module_height": 10,
-    })
-    code = barcode.get("code128", dni, writer=writer)
-    buf = io.BytesIO()
-    code.write(buf)
-    buf.seek(0)
-    return ImageReader(buf)
+    barcode_obj = barcode.get("code128", dni, writer=ImageWriter())
+    barcode_img = barcode_obj.render(writer_options={"module_height": 25, "font_size": 8})
+    return barcode_img.resize(size)
 
 
 # =================================================================
-# 4) COMPOSICIÓN SOBRE EL PDF (llena las 3 tarjetas de la hoja)
+# Composición principal
 # =================================================================
 
 def generar_carnet(datos: dict) -> str:
@@ -199,96 +100,70 @@ def generar_carnet(datos: dict) -> str:
     datos debe tener las claves:
         ie        -> "mamm" o "birf"
         dni       -> str, 8 dígitos
-        apellido  -> str (mayúsculas)
-        nombre    -> str (mayúsculas)
-        nivel     -> "PRIMARIA" o "SECUNDARIA"
-        grado     -> "PRIMERO".."QUINTO"
-        seccion   -> "A".."Z"
+        apellido  -> str (en mayúsculas)
+        nombre    -> str (en mayúsculas)
+        grado     -> str "1" a "5" (se traduce a PRIMERO..QUINTO)
+        seccion   -> str ("A" a "Z")
         turno     -> "MAÑANA" o "TARDE"
 
-    Devuelve la ruta del PDF final (con las 3 tarjetas llenas).
+    Devuelve la ruta del archivo PDF final generado (con las 3
+    tarjetas de la hoja llenas, listas para imprimir y cortar).
     """
     ie = datos["ie"]
-    if ie not in COORDENADAS:
+    if ie not in PLANTILLAS:
         raise ValueError(f"I.E. desconocida: {ie}")
 
-    cfg = COORDENADAS[ie]
-    ruta_plantilla = cfg["plantilla"]
-
+    ruta_plantilla = PLANTILLAS[ie]
     if not os.path.exists(ruta_plantilla):
         raise FileNotFoundError(
-            f"No se encontró la plantilla: {ruta_plantilla}."
+            f"No se encontró la plantilla: {ruta_plantilla}. "
+            f"Colócala en static/templates/ con ese nombre exacto."
         )
 
-    reader = PdfReader(ruta_plantilla)
-    pagina = reader.pages[0]
-    ancho = float(pagina.mediabox.width)
-    alto = float(pagina.mediabox.height)
+    plantilla = Image.open(ruta_plantilla).convert("RGB")
+    draw = ImageDraw.Draw(plantilla)
+    font = ImageFont.truetype(FUENTE_PATH, TAMANO_FUENTE)
 
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=(ancho, alto))
+    codigo = datos["dni"]
+    apellidos = datos["apellido"]
+    nombres = datos["nombre"]
+    nivel = NIVEL_TEXTO
+    grado = GRADOS_TEXTO.get(str(datos["grado"]), str(datos["grado"]))
+    turno = datos["turno"]
+    seccion = datos["seccion"]
 
-    campos_texto = {
-        "apellido": datos["apellido"],
-        "nombre": datos["nombre"],
-        "dni": datos["dni"],
-        "nivel": datos["nivel"],
-        "grado": datos["grado"],
-        "seccion": datos["seccion"],
-        "turno": datos["turno"],
-    }
+    # las 3 tarjetas de la hoja se llenan con los mismos datos
+    textos = [codigo, apellidos, nombres, nivel, grado, turno, seccion] * 3
 
-    qr_img = _generar_qr_imagereader(datos["dni"])
-    barcode_img = _generar_barcode_imagereader(datos["dni"])
+    for (x, y), texto in zip(COORDS, textos):
+        draw.text((x, y), texto, font=font, fill=COLOR_TEXTO)
 
-    for i in range(3):  # las 3 tarjetas de la hoja
-        posiciones = cfg["slots_texto"][i]
-        extra = cfg["slots_extra"][i]
+    qr_img = _generar_qr_con_borde(codigo)
+    if qr_img is not None:
+        for x, y in QR_COORDS:
+            plantilla.paste(qr_img, (x, y))
+    else:
+        print("[AppCarnetX] Aviso: falta 'pip install qrcode[pil]'. Se omitió el QR.")
 
-        for clave, texto in campos_texto.items():
-            xy = posiciones[clave]
-            tam_base = cfg["font_size"][clave]
-            tamano = _ajustar_tamano(c, texto, FUENTE, tam_base, cfg["max_width"])
-            c.setFont(FUENTE, tamano)
-            c.setFillColorRGB(*cfg["color_texto"])
-            c.drawString(xy[0], xy[1], texto)
-
-        # QR (reemplaza el logo "marca de agua" de cada tarjeta)
-        if qr_img is not None:
-            qxy = extra["qr"]["xy"]
-            qsz = extra["qr"]["size"]
-            c.drawImage(qr_img, qxy[0], qxy[1], width=qsz[0], height=qsz[1], mask="auto")
-
-        # Código de barras (franja libre bajo "Turno")
-        if barcode_img is not None:
-            bxy = extra["barcode"]["xy"]
-            bsz = extra["barcode"]["size"]
-            c.drawImage(barcode_img, bxy[0], bxy[1], width=bsz[0], height=bsz[1], mask="auto")
-
-    c.save()
-    buf.seek(0)
-
-    overlay_reader = PdfReader(buf)
-    writer = PdfWriter()
-    pagina.merge_page(overlay_reader.pages[0])
-    writer.add_page(pagina)
-
-    for i in range(1, len(reader.pages)):
-        writer.add_page(reader.pages[i])
+    barcode_img = _generar_barcode(codigo)
+    if barcode_img is not None:
+        for x, y in BARCODE_COORDS:
+            plantilla.paste(barcode_img, (x, y))
+    else:
+        print("[AppCarnetX] Aviso: falta 'pip install python-barcode[images]'. Se omitió el código de barras.")
 
     os.makedirs(CARPETA_SALIDA, exist_ok=True)
     marca_tiempo = datetime.now().strftime("%Y%m%d%H%M%S")
-    nombre_archivo = f'carnet_{datos["dni"]}_{marca_tiempo}.pdf'
+    nombre_archivo = f"carnet_{codigo}_{marca_tiempo}.pdf"
     ruta_salida = os.path.join(CARPETA_SALIDA, nombre_archivo)
 
-    with open(ruta_salida, "wb") as f:
-        writer.write(f)
+    plantilla.save(ruta_salida, format="PDF", resolution=RESOLUCION_PDF)
 
     return ruta_salida
 
 
 # =================================================================
-# 5) EJEMPLO DE USO DIRECTO (sin backend)
+# Ejemplo de uso directo (sin backend)
 # =================================================================
 
 def main():
@@ -297,8 +172,7 @@ def main():
         "dni": "12345678",
         "apellido": "PEREZ GOMEZ",
         "nombre": "JUAN CARLOS",
-        "nivel": "SECUNDARIA",
-        "grado": "TERCERO",
+        "grado": "3",
         "seccion": "B",
         "turno": "MAÑANA",
     }
